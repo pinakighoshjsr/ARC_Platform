@@ -10,5 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to EC2
-        run: echo "Pipeline Triggered Successfully"
+      - name: SSH into EC2 and test connection
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "Connected to EC2 successfully"
+            pwd
+            ls -l
