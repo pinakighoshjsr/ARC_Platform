@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS cicd_test (
+    id SERIAL PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT NOW()
+);
