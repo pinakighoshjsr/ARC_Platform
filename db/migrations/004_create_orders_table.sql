@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS orders 
+(
+    id SERIAL PRIMARY KEY,
+    user_id UUID,
+    amount DECIMAL(10,2) NOT NULL,
+    status VARCHAR(20) DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT NOW()
+);
