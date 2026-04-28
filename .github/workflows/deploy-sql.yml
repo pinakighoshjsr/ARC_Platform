@@ -32,5 +32,5 @@ jobs:
             export PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             for file in /home/ubuntu/sql-deploy/db/migrations/*.sql
             do
-              psql -h localhost -U postgres -d arc_db -f "$file"
+              psql -h localhost -U postgres -d arc_db -v ON_ERROR_STOP=1 -f "$file"
             done
