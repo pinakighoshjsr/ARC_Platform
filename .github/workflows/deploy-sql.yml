@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'db/migrations/*.sql'
+      - '.github/workflows/deploy-sql.yml'
 
 jobs:
   deploy-sql:
@@ -13,11 +14,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Copy SQL to EC2
+      - name: Copy SQL files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "db/migrations/*.sql"
           target: "/home/ubuntu/sql-deploy"
@@ -26,11 +27,39 @@ jobs:
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             export PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+
             for file in /home/ubuntu/sql-deploy/db/migrations/*.sql
             do
-              psql -h localhost -U postgres -d arc_db -v ON_ERROR_STOP=1 -f "$file"
+              filename=$(basename "$file")
+
+              table_exists=$(psql -h localhost -U postgres -d arc_db -t -c \
+                "SELECT COUNT(*) 
+                 FROM information_schema.tables 
+                 WHERE table_name = 'migration_history';")
+
+              if [ "$table_exists" -eq 0 ]; then
+                echo "Creating migration_history table..."
+                psql -h localhost -U postgres -d arc_db -v ON_ERROR_STOP=1 -f \
+                  /home/ubuntu/sql-deploy/db/migrations/007_create_migration_history.sql
+              fi
+
+              already_run=$(psql -h localhost -U postgres -d arc_db -t -c \
+                "SELECT COUNT(*) 
+                 FROM migration_history 
+                 WHERE file_name = '$filename';")
+
+              if [ "$already_run" -eq 0 ]; then
+                echo "Executing $filename"
+
+                psql -h localhost -U postgres -d arc_db -v ON_ERROR_STOP=1 -f "$file"
+
+                psql -h localhost -U postgres -d arc_db -c \
+                  "INSERT INTO migration_history (file_name) VALUES ('$filename');"
+              else
+                echo "Skipping $filename (already executed)"
+              fi
             done
