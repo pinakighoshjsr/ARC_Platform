@@ -1,0 +1,9 @@
+INSERT INTO orders 
+(user_id, amount, status)
+VALUES
+(NULL, 150.00, 'PENDING'),
+(NULL, 275.50, 'APPROVED'),
+(NULL, 499.99, 'REJECTED'),
+(NULL, 750.00, 'PENDING'),
+(NULL, 980.25, 'APPROVED');
+
