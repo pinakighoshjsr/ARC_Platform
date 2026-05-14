@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS arc_db.employee_master
+CREATE TABLE IF NOT EXISTS employee_master
 (
     employee_id SERIAL PRIMARY KEY,
     employee_name VARCHAR(100) NOT NULL,
